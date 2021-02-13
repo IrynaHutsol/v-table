@@ -4,29 +4,31 @@
     <div v-if="loading">
         Loading...
     </div>
-    <div class="table" v-if="this.newData.length > 0">
-        <div class="table-header">
-            <div @click="sort" class="row-header">Stock</div>
-            <div class="row-header">Current</div>
-            <div class="row-header">Change</div>
-        </div>
-        <div class="table-body">
-            <div class=table-row v-for="(item, i) in this.newData" :key="i">
-                <div class="row">
-                    {{item.stocks}}
-                </div>
-                <div class="row">
-                    {{item.current.toFixed(2)}}
-                </div>
-                <div class="row" :class="{plus:item.change > 0, minus:item.change < 0}">
-                    {{item.change.toFixed(2).includes('-') ? item.change.toFixed(2) : '+' + item.change.toFixed(2)}}
+    <div v-else>
+        <div class="table" v-if="this.newData.length">
+            <div class="table-header">
+                <div class="row-header">Stock</div>
+                <div class="row-header">Current</div>
+                <div class="row-header">Change</div>
+            </div>
+            <div class="table-body">
+                <div class=table-row v-for="(item, i) in this.newData" :key="i">
+                    <div class="row">
+                        {{ item.stocks }}
+                    </div>
+                    <div class="row">
+                        {{ item.current.toFixed(2) }}
+                    </div>
+                    <div class="row" :class="{ plus: item.change > 0, minus: item.change < 0 }">
+                        {{ item.change.toFixed(2).includes('-') ? item.change.toFixed(2) : '+' + item.change.toFixed(2) }}
+                    </div>
                 </div>
             </div>
         </div>
+        <div v-else-if="noData">
+            No data
+        </div>
     </div>
-    <div v-if="noData">
-        No data
-    </div> 
   </div>
 </template>
 
@@ -38,22 +40,18 @@ export default {
     data () {
         return {
             data: {},
-            noData: false,
-            loading: false,
             newData: [],
-            count: 0
+            noData: false,
+            loading: false
         }
     },
     methods: {
         async getData() {
             try {
-                this.newData = []
-                this.loading = true
-                this.noData = false
-                this.data = await simulateAsyncReq(payload)
-                this.loading = false
-                this.noData = false
-
+                this.newData = [];
+                this.loading = true;
+                this.data = await simulateAsyncReq(payload);
+                   
                 for (let i = 0; i < Object.keys(this.data).length; i++) {
                     this.newData.push({
                         stocks: this.data.stocks[i],
@@ -61,18 +59,12 @@ export default {
                         change: this.data.current[i] - this.data.start[i]
                     });
                 }
-            }
-            catch (error) {
-                this.noData = true
-                this.loading = false
-            }
-        },
-        sort() {
-            this.count++ 
-            if (this.count & 1){
-                this.newData.sort((a,b) => a.stocks.localeCompare(b.stocks))
-            }else {
-                this.newData.reverse();
+
+                this.newData.sort((a,b) => a.stocks.localeCompare(b.stocks));
+            } catch {
+                this.noData = true;
+            } finally {
+                this.loading = false;
             }
         }
     }
@@ -85,13 +77,17 @@ export default {
     width: 120px;
     background: #eaeaea;
     border: 1px solid #e0dede;
+    border-radius: 2px;
     color: #565353;
     margin-bottom: 20px;
     font-size: 15px;
     cursor: pointer;
-}
-.btn-get-data:focus {
-    outline: none !important;
+    &:focus {
+        outline: none !important;
+    }
+    &:hover {
+        background: #dbd8d8;
+    }
 }
 .table {
     max-width: 350px;
@@ -113,9 +109,9 @@ export default {
     height: 30px;
     align-items: center;
     border-bottom: 1px solid #e0dede;
-}
-.table-row:last-child {
-    border-bottom: none;
+    &:last-child {
+        border-bottom: none;
+    }
 }
 .plus {
     color: #62e262;
@@ -125,8 +121,5 @@ export default {
 }
 .row, .row-header {
     width: 33%;
-}
-.row-header:first-child {
-    cursor: pointer;
 }
 </style>
